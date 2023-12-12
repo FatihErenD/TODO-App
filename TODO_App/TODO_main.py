@@ -21,7 +21,6 @@ class TODOApp(QMainWindow):
         self.ui.tableWidget.setColumnWidth(1, 150)
         self.ui.tableWidget.setColumnWidth(2, 350)
         self.ui.tableWidget.setColumnWidth(3, 110)
-        self.ui.tableWidget.verticalHeader().setVisible(True)
 
         self.highlight_date = QTextCharFormat()
         self.highlight_date.setBackground(QColor(49, 78, 130))
@@ -36,6 +35,7 @@ class TODOApp(QMainWindow):
         self.ui.completedTaskButton.clicked.connect(self.show_completed_tasks)
         self.ui.saveToFileButton.clicked.connect(self.save_to_file)
         self.ui.loadFromFileButton.clicked.connect(self.load_from_file)
+        self.ui.tableWidget.doubleClicked.connect(self.edit_task)
 
     def remove_from_dict(self, remove_index: int):
         for i in range(remove_index, len(self.tasks)):
@@ -75,13 +75,11 @@ class TODOApp(QMainWindow):
             self.ui.tableWidget.setItem(self.row - 1, 1, QtWidgets.QTableWidgetItem(scan_name))
             self.ui.tableWidget.setItem(self.row - 1, 2, QtWidgets.QTableWidgetItem(scan_description))
             self.ui.tableWidget.setItem(self.row - 1, 3, QtWidgets.QTableWidgetItem(str(selected_date)))
-            self.checkBox.append(QCheckBox(''))
-            self.checkBox[self.row-1].setStyleSheet("background-color: rgb(22, 27, 34);")
-            self.checkBox[self.row-1].setObjectName(str(self.row - 1))
-            self.ui.tableWidget.setCellWidget(self.row - 1, 0, self.checkBox[self.row-1])
-            self.checkBox[self.row-1].clicked.connect(self.checked_task)
-            for o in self.checkBox:
-                number = int(o.objectName())
+            self.checkBox.append(QCheckBox())
+            self.checkBox[self.row - 1].setStyleSheet("background-color: rgb(22, 27, 34);")
+            self.checkBox[self.row - 1].setObjectName(str(self.row - 1))
+            self.ui.tableWidget.setCellWidget(self.row - 1, 0, self.checkBox[self.row - 1])
+            self.checkBox[self.row - 1].clicked.connect(self.checked_task)
             self.ui.tableWidget.setStyleSheet("QTableWidget{\n"
                                               "    font: 12pt \"Mongolian Baiti\";\n"
                                               "    color: rgb(198, 205, 213);\n"
@@ -108,13 +106,16 @@ class TODOApp(QMainWindow):
         self.ui.nameLineEdit.clear()
         self.ui.descriptionLineEdit.clear()
 
+    def edit_task(self):
+        pass
+
     def checked_task(self):
         signal = self.sender()
         signal_number = int(signal.objectName())
         if signal.checkState() == Qt.Checked:
             self.ui.tableWidget.removeRow(signal_number)
             self.checkBox.pop(signal_number)
-            date = self.tasks[signal_number+1]["date"]
+            date = self.tasks[signal_number + 1]["date"]
             self.remove_from_dict(signal_number + 1)
             self.remove_from_calender(date)
             for o in self.checkBox:
@@ -154,7 +155,7 @@ class TODOApp(QMainWindow):
         if selected_row == -1:
             self.status_show_message("error", "Please Select a Task to Remove", 1200)
         else:
-            date = self.tasks[selected_row+1]["date"]
+            date = self.tasks[selected_row + 1]["date"]
             self.ui.tableWidget.removeRow(selected_row)
             self.row -= 1
             self.remove_from_dict(selected_row + 1)
@@ -234,56 +235,50 @@ class TODOApp(QMainWindow):
                 self.status_show_message("success", "Successfully Loaded", 1000)
 
     def up_row(self):
-        QMessageBox.information(self, "Up Button", "Under Maintenance")
-        if False:
-            selected_row = self.ui.tableWidget.currentRow()
-            if selected_row <= 0:
-                self.status_show_message("error", "Please Select a Valid Row", 1200)
+        selected_row = self.ui.tableWidget.currentRow()
+        if selected_row != 0:
+            if selected_row == len(self.tasks) - 1:
+                self.ui.tableWidget.setRowCount(selected_row + 2)
             else:
-                temp = self.tasks[selected_row + 1]
-                self.tasks[selected_row + 1] = self.tasks[selected_row]
-                self.tasks[selected_row] = temp
-                # for x in self.tasks:
-                #     self.ui.tableWidget.setRowCount(x)
-                #     self.ui.tableWidget.setItem(x - 1, 0,
-                #                                 QtWidgets.QTableWidgetItem(self.tasks[x]["name"]))
-                #     self.ui.tableWidget.setItem(x - 1, 1,
-                #                                 QtWidgets.QTableWidgetItem(self.tasks[x]["description"]))
-                #     self.ui.tableWidget.setItem(x - 1, 2,
-                #                                 QtWidgets.QTableWidgetItem(str(
-                #                                     self.tasks[x]["date"].toPydate().strftime("%d.%m.%Y"))))
-                print(self.tasks)
-                # self.ui.tableWidget.setItem(selected_row - 1, 0,
-                #                             QtWidgets.QTableWidgetItem(self.tasks[selected_row + 1]["name"]))
-                # self.ui.tableWidget.setItem(selected_row - 1, 1,
-                #                             QtWidgets.QTableWidgetItem(self.tasks[selected_row + 1]["description"]))
-                # self.ui.tableWidget.setItem(selected_row - 1, 2,
-                #                             QtWidgets.QTableWidgetItem(str(self.tasks[selected_row + 1]["date"].toPydate().strftime("%d.%m.%Y"))))
-                # self.ui.tableWidget.setItem(selected_row, 0,
-                #                             QtWidgets.QTableWidgetItem(self.tasks[selected_row]["name"]))
-                # self.ui.tableWidget.setItem(selected_row, 1,
-                #                             QtWidgets.QTableWidgetItem(self.tasks[selected_row]["description"]))
-                # self.ui.tableWidget.setItem(selected_row, 2,
-                #                             QtWidgets.QTableWidgetItem(str(self.tasks[selected_row]["date"].toPydate().strftime("%d.%m.%Y"))))
-                print(self.tasks)
-
-
-        # print(self.ui.tableWidget.currentRow())
-
-        # if item.checkState() == Qt.Checked:
-        #     print("item: ", int("%s" % item.text()) - 1)
-        #     print("%s" % item.text())
-        #     will_remove = int(int("%s" % item.text()) - 1)
-        #     print(type(will_remove))
-        #     print(will_remove)
-        #     print("a")
-        #     # item.setCheckState(Qt.Unchecked)
-        #     self.remove_from_dict(int("%s" % item.text()))
-        #     self.row -= 1
-        #     print(self.tasks)
+                self.ui.tableWidget.insertRow(selected_row + 1)
+            temp = self.tasks[selected_row]
+            self.tasks[selected_row] = self.tasks[selected_row + 1]
+            self.tasks[selected_row + 1] = temp
+            temp = self.checkBox[selected_row - 1]
+            self.checkBox[selected_row - 1] = self.checkBox[selected_row]
+            self.checkBox[selected_row] = temp
+            self.checkBox[selected_row].setObjectName(str(int(self.checkBox[selected_row].objectName()) + 1))
+            self.checkBox[selected_row - 1].setObjectName(str(int(self.checkBox[selected_row - 1].objectName()) - 1))
+            self.ui.tableWidget.setCellWidget(selected_row + 1, 0, self.checkBox[selected_row])
+            self.ui.tableWidget.setItem(selected_row + 1, 1, QTableWidgetItem(self.tasks[selected_row + 1]["name"]))
+            self.ui.tableWidget.setItem(selected_row + 1, 2, QTableWidgetItem(self.tasks[selected_row + 1]["description"]))
+            self.ui.tableWidget.setItem(selected_row + 1, 3, QTableWidgetItem(self.tasks[selected_row + 1]["date"]))
+            self.ui.tableWidget.removeRow(selected_row - 1)
+        else:
+            self.status_show_message("error", "Already at the Top", 1200)
 
     def down_row(self):
-        QMessageBox.information(self, "Down Button", "Under Maintenance")
+        selected_row = self.ui.tableWidget.currentRow()
+        if selected_row < len(self.tasks) - 1:
+            self.ui.tableWidget.insertRow(selected_row)
+            temp = self.checkBox[selected_row]
+            self.checkBox[selected_row] = self.checkBox[selected_row + 1]
+            self.checkBox[selected_row + 1] = temp
+            self.checkBox[selected_row].setObjectName(str(int(self.checkBox[selected_row].objectName()) - 1))
+            self.checkBox[selected_row + 1].setObjectName(str(int(self.checkBox[selected_row + 1].objectName()) + 1))
+            self.ui.tableWidget.setCellWidget(selected_row, 0, self.checkBox[selected_row])
+            self.ui.tableWidget.setItem(selected_row, 1,
+                                        QTableWidgetItem(self.tasks[selected_row + 2]["name"]))
+            self.ui.tableWidget.setItem(selected_row, 2,
+                                        QTableWidgetItem(self.tasks[selected_row + 2]["description"]))
+            self.ui.tableWidget.setItem(selected_row, 3,
+                                        QTableWidgetItem(self.tasks[selected_row + 2]["date"]))
+            self.ui.tableWidget.removeRow(selected_row + 2)
+            temp = self.tasks[selected_row + 1]
+            self.tasks[selected_row + 1] = self.tasks[selected_row + 2]
+            self.tasks[selected_row + 2] = temp
+        else:
+            self.status_show_message("error", "Already at the Bottom", 1200)
 
 
 uygulama = QApplication([])

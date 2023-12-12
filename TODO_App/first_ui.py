@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 
 class TODOAppUi(object):
@@ -17,6 +17,7 @@ class TODOAppUi(object):
         self.gridLayout.setHorizontalSpacing(15)
         self.gridLayout.setVerticalSpacing(10)
         self.gridLayout_2 = QtWidgets.QGridLayout(self.center)
+
         # Table Widget -------------------------------------------------------------------------------------------------
         self.tableWidget = QtWidgets.QTableWidget(self.center)
         self.tableWidget.setMinimumSize(QtCore.QSize(700, 360))
@@ -45,15 +46,13 @@ class TODOAppUi(object):
                                        "}")
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setRowCount(0)
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget.setHorizontalHeaderItem(3, item)
+        self.tableWidget.setColumnWidth(0, 5)
+        self.tableWidget.setColumnWidth(1, 150)
+        self.tableWidget.setColumnWidth(2, 350)
+        self.tableWidget.setColumnWidth(3, 110)
+        self.tableWidget.setHorizontalHeaderLabels(["", "Name", "Description", "Date"])
         self.gridLayout.addWidget(self.tableWidget, 0, 0, 1, 1)
+
         # Table Widget Control -----------------------------------------------------------------------------------------
         # Delete All ---------------------------------------------------------------------------------------------------
         self.tableControlLayout = QtWidgets.QHBoxLayout()
