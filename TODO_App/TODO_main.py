@@ -1,21 +1,24 @@
-from PyQt5.QtGui import QTextCharFormat, QColor
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QMainWindow, QWidget, QCheckBox, QTableWidgetItem, QMessageBox, QApplication
 from first_ui import TODOAppUi
+from PyQt5.QtGui import QTextCharFormat, QColor
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
+from datetime import datetime
 import json
 
 
-class TODOApp(QMainWindow):
+class TODOApp(QMainWindow, QWidget):
     tasks = {}
     completed_tasks = {}
     checkBox = []
     row = 1
+    completed_task_number = 1
 
     def __init__(self):
         super().__init__()
         self.ui = TODOAppUi()
         self.ui.start_ui(self)
+        self.setWindowTitle("TODOApp")
 
         self.ui.tableWidget.setColumnWidth(0, 5)
         self.ui.tableWidget.setColumnWidth(1, 150)
@@ -35,7 +38,7 @@ class TODOApp(QMainWindow):
         self.ui.completedTaskButton.clicked.connect(self.show_completed_tasks)
         self.ui.saveToFileButton.clicked.connect(self.save_to_file)
         self.ui.loadFromFileButton.clicked.connect(self.load_from_file)
-        self.ui.tableWidget.doubleClicked.connect(self.edit_task)
+        self.ui.tableWidget.itemChanged.connect(self.edit_task)
 
     def remove_from_dict(self, remove_index: int):
         for i in range(remove_index, len(self.tasks)):
@@ -107,7 +110,31 @@ class TODOApp(QMainWindow):
         self.ui.descriptionLineEdit.clear()
 
     def edit_task(self):
-        pass
+        selected_row = self.ui.tableWidget.currentRow()
+        if selected_row != -1:
+            print(self.tasks)
+            if self.tasks[selected_row + 1]["name"] != self.ui.tableWidget.item(selected_row, 1).text() \
+                    or self.tasks[selected_row + 1]["description"] != self.ui.tableWidget.item(selected_row, 2).text() \
+                    or self.tasks[selected_row + 1]["date"] != self.ui.tableWidget.item(selected_row, 3).text():
+                try:
+                    is_date = bool(datetime.strptime(self.ui.tableWidget.item(selected_row, 3).text(), "%d.%m.%Y"))
+                except ValueError:
+                    is_date = False
+                if is_date:
+                    changed_date = self.tasks[selected_row + 1]["date"]
+                    self.tasks[selected_row + 1]["name"] = self.ui.tableWidget.item(selected_row, 1).text()
+                    self.tasks[selected_row + 1]["description"] = self.ui.tableWidget.item(selected_row, 2).text()
+                    self.tasks[selected_row + 1]["date"] = self.ui.tableWidget.item(selected_row, 3).text()
+                    date = QtCore.QDate.fromString(self.tasks[selected_row + 1]["date"], "dd.MM.yyyy")
+                    self.remove_from_calender(changed_date)
+                    self.ui.calendarWidget.setDateTextFormat(date, self.highlight_date)
+                    self.status_show_message("success", "Successfully Changed", 1000)
+                else:
+                    self.ui.tableWidget.setItem(selected_row, 3, QTableWidgetItem(self.tasks[selected_row + 1]["date"]))
+                    self.status_show_message("error",
+                                             "Incorrect Date Format. Format Should be dd.mm.yyyy", 2000)
+
+            print(self.tasks)
 
     def checked_task(self):
         signal = self.sender()
@@ -116,6 +143,8 @@ class TODOApp(QMainWindow):
             self.ui.tableWidget.removeRow(signal_number)
             self.checkBox.pop(signal_number)
             date = self.tasks[signal_number + 1]["date"]
+            self.completed_tasks[self.completed_task_number] = self.tasks[signal_number + 1]
+            self.completed_task_number += 1
             self.remove_from_dict(signal_number + 1)
             self.remove_from_calender(date)
             for o in self.checkBox:
@@ -134,7 +163,7 @@ class TODOApp(QMainWindow):
                 self.row = 1
                 self.tasks = {}
                 self.checkBox = []
-                self.status_show_message("success", "Successfuly Deleted", 1000)
+                self.status_show_message("success", "Successfully Deleted", 1000)
             elif select == 1:
                 answer = QMessageBox.question(self, "Are You Sure", "Do you want delete all tasks?",
                                               QMessageBox.Yes | QMessageBox.No)
@@ -146,7 +175,7 @@ class TODOApp(QMainWindow):
                     self.row = 1
                     self.tasks = {}
                     self.checkBox = []
-                    self.status_show_message("success", "Successfuly Deleted", 1000)
+                    self.status_show_message("success", "Successfully Deleted", 1000)
         elif select == 1:
             QMessageBox.warning(self, "Warning", "There is nothing to delete.")
 
@@ -251,7 +280,8 @@ class TODOApp(QMainWindow):
             self.checkBox[selected_row - 1].setObjectName(str(int(self.checkBox[selected_row - 1].objectName()) - 1))
             self.ui.tableWidget.setCellWidget(selected_row + 1, 0, self.checkBox[selected_row])
             self.ui.tableWidget.setItem(selected_row + 1, 1, QTableWidgetItem(self.tasks[selected_row + 1]["name"]))
-            self.ui.tableWidget.setItem(selected_row + 1, 2, QTableWidgetItem(self.tasks[selected_row + 1]["description"]))
+            self.ui.tableWidget.setItem(selected_row + 1, 2,
+                                        QTableWidgetItem(self.tasks[selected_row + 1]["description"]))
             self.ui.tableWidget.setItem(selected_row + 1, 3, QTableWidgetItem(self.tasks[selected_row + 1]["date"]))
             self.ui.tableWidget.removeRow(selected_row - 1)
         else:

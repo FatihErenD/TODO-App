@@ -3,7 +3,6 @@ from PyQt5 import QtCore, QtWidgets
 
 class TODOAppUi(object):
     def start_ui(self, FirstWindow):
-        FirstWindow.setObjectName("FirstWindow")
         FirstWindow.resize(1050, 600)
         FirstWindow.setStyleSheet("MainWindow{\n"
                                   "    background-color: rgb(33, 38, 45);\n"
@@ -38,11 +37,6 @@ class TODOAppUi(object):
                                        "    border: 1px solid;\n"
                                        "    border-color: rgba(33, 38, 45, 255);\n"
                                        "    background-color: rgba(33, 38, 45, 255);\n"
-                                       "}\n"
-                                       "QTableView QScrollArea{\n"
-                                       "    border: none;\n"
-                                       "    background-color: rgba(198, 205, 213, 128);\n"
-                                       "    \n"
                                        "}")
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setRowCount(0)
