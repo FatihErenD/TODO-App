@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QMainWindow, QWidget, QCheckBox, QTableWidgetItem, QMessageBox, QApplication
 from first_ui import TODOAppUi
+from completed_tasks_ui import CompletedTasksUi
+from PyQt5.QtWidgets import QMainWindow, QWidget, QCheckBox, QTableWidgetItem, QMessageBox, QApplication
 from PyQt5.QtGui import QTextCharFormat, QColor
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
@@ -13,17 +14,16 @@ class TODOApp(QMainWindow, QWidget):
     checkBox = []
     row = 1
     completed_task_number = 1
+    up_state = False
+    down_state = False
+    add_state = False
 
     def __init__(self):
         super().__init__()
         self.ui = TODOAppUi()
         self.ui.start_ui(self)
+        self.c_ui = CompletedTasksUi()
         self.setWindowTitle("TODOApp")
-
-        self.ui.tableWidget.setColumnWidth(0, 5)
-        self.ui.tableWidget.setColumnWidth(1, 150)
-        self.ui.tableWidget.setColumnWidth(2, 350)
-        self.ui.tableWidget.setColumnWidth(3, 110)
 
         self.highlight_date = QTextCharFormat()
         self.highlight_date.setBackground(QColor(49, 78, 130))
@@ -70,18 +70,19 @@ class TODOApp(QMainWindow, QWidget):
         scan_description = self.ui.descriptionLineEdit.text()
         selected_date = self.ui.calendarWidget.selectedDate().toPyDate().strftime("%d.%m.%Y")
         if scan_name != "":
+            self.add_state = True
             self.ui.tableWidget.setRowCount(self.row)
             self.tasks[self.row] = {}
             self.tasks[self.row]["name"] = scan_name
             self.tasks[self.row]["description"] = scan_description
             self.tasks[self.row]["date"] = selected_date
-            self.ui.tableWidget.setItem(self.row - 1, 1, QtWidgets.QTableWidgetItem(scan_name))
-            self.ui.tableWidget.setItem(self.row - 1, 2, QtWidgets.QTableWidgetItem(scan_description))
-            self.ui.tableWidget.setItem(self.row - 1, 3, QtWidgets.QTableWidgetItem(str(selected_date)))
             self.checkBox.append(QCheckBox())
             self.checkBox[self.row - 1].setStyleSheet("background-color: rgb(22, 27, 34);")
             self.checkBox[self.row - 1].setObjectName(str(self.row - 1))
             self.ui.tableWidget.setCellWidget(self.row - 1, 0, self.checkBox[self.row - 1])
+            self.ui.tableWidget.setItem(self.row - 1, 1, QtWidgets.QTableWidgetItem(scan_name))
+            self.ui.tableWidget.setItem(self.row - 1, 2, QtWidgets.QTableWidgetItem(scan_description))
+            self.ui.tableWidget.setItem(self.row - 1, 3, QtWidgets.QTableWidgetItem(str(selected_date)))
             self.checkBox[self.row - 1].clicked.connect(self.checked_task)
             self.ui.tableWidget.setStyleSheet("QTableWidget{\n"
                                               "    font: 12pt \"Mongolian Baiti\";\n"
@@ -104,6 +105,7 @@ class TODOApp(QMainWindow, QWidget):
             self.ui.calendarWidget.setDateTextFormat(self.ui.calendarWidget.selectedDate(), self.highlight_date)
             self.status_show_message("success", "Successfully Added", 1000)
             self.row += 1
+            self.add_state = False
         else:
             self.status_show_message("error", "Can't Save Please Give Your Task a Name", 1200)
         self.ui.nameLineEdit.clear()
@@ -111,8 +113,7 @@ class TODOApp(QMainWindow, QWidget):
 
     def edit_task(self):
         selected_row = self.ui.tableWidget.currentRow()
-        if selected_row != -1:
-            print(self.tasks)
+        if selected_row != -1 and not self.add_state and not self.up_state and not self.down_state:
             if self.tasks[selected_row + 1]["name"] != self.ui.tableWidget.item(selected_row, 1).text() \
                     or self.tasks[selected_row + 1]["description"] != self.ui.tableWidget.item(selected_row, 2).text() \
                     or self.tasks[selected_row + 1]["date"] != self.ui.tableWidget.item(selected_row, 3).text():
@@ -266,10 +267,19 @@ class TODOApp(QMainWindow, QWidget):
     def up_row(self):
         selected_row = self.ui.tableWidget.currentRow()
         if selected_row != 0:
+            self.up_state = True
             if selected_row == len(self.tasks) - 1:
                 self.ui.tableWidget.setRowCount(selected_row + 2)
             else:
                 self.ui.tableWidget.insertRow(selected_row + 1)
+            self.ui.tableWidget.setCellWidget(selected_row + 1, 0, self.checkBox[selected_row - 1])
+            self.ui.tableWidget.setItem(selected_row + 1, 1,
+                                        QTableWidgetItem(self.tasks[selected_row]["name"]))
+            self.ui.tableWidget.setItem(selected_row + 1, 2,
+                                        QTableWidgetItem(self.tasks[selected_row]["description"]))
+            self.ui.tableWidget.setItem(selected_row + 1, 3,
+                                        QTableWidgetItem(self.tasks[selected_row]["date"]))
+            self.ui.tableWidget.removeRow(selected_row - 1)
             temp = self.tasks[selected_row]
             self.tasks[selected_row] = self.tasks[selected_row + 1]
             self.tasks[selected_row + 1] = temp
@@ -278,25 +288,16 @@ class TODOApp(QMainWindow, QWidget):
             self.checkBox[selected_row] = temp
             self.checkBox[selected_row].setObjectName(str(int(self.checkBox[selected_row].objectName()) + 1))
             self.checkBox[selected_row - 1].setObjectName(str(int(self.checkBox[selected_row - 1].objectName()) - 1))
-            self.ui.tableWidget.setCellWidget(selected_row + 1, 0, self.checkBox[selected_row])
-            self.ui.tableWidget.setItem(selected_row + 1, 1, QTableWidgetItem(self.tasks[selected_row + 1]["name"]))
-            self.ui.tableWidget.setItem(selected_row + 1, 2,
-                                        QTableWidgetItem(self.tasks[selected_row + 1]["description"]))
-            self.ui.tableWidget.setItem(selected_row + 1, 3, QTableWidgetItem(self.tasks[selected_row + 1]["date"]))
-            self.ui.tableWidget.removeRow(selected_row - 1)
+            self.up_state = False
         else:
             self.status_show_message("error", "Already at the Top", 1200)
 
     def down_row(self):
         selected_row = self.ui.tableWidget.currentRow()
         if selected_row < len(self.tasks) - 1:
+            self.down_state = True
             self.ui.tableWidget.insertRow(selected_row)
-            temp = self.checkBox[selected_row]
-            self.checkBox[selected_row] = self.checkBox[selected_row + 1]
-            self.checkBox[selected_row + 1] = temp
-            self.checkBox[selected_row].setObjectName(str(int(self.checkBox[selected_row].objectName()) - 1))
-            self.checkBox[selected_row + 1].setObjectName(str(int(self.checkBox[selected_row + 1].objectName()) + 1))
-            self.ui.tableWidget.setCellWidget(selected_row, 0, self.checkBox[selected_row])
+            self.ui.tableWidget.setCellWidget(selected_row, 0, self.checkBox[selected_row + 1])
             self.ui.tableWidget.setItem(selected_row, 1,
                                         QTableWidgetItem(self.tasks[selected_row + 2]["name"]))
             self.ui.tableWidget.setItem(selected_row, 2,
@@ -304,14 +305,20 @@ class TODOApp(QMainWindow, QWidget):
             self.ui.tableWidget.setItem(selected_row, 3,
                                         QTableWidgetItem(self.tasks[selected_row + 2]["date"]))
             self.ui.tableWidget.removeRow(selected_row + 2)
+            temp = self.checkBox[selected_row]
+            self.checkBox[selected_row] = self.checkBox[selected_row + 1]
+            self.checkBox[selected_row + 1] = temp
+            self.checkBox[selected_row].setObjectName(str(int(self.checkBox[selected_row].objectName()) - 1))
+            self.checkBox[selected_row + 1].setObjectName(str(int(self.checkBox[selected_row + 1].objectName()) + 1))
             temp = self.tasks[selected_row + 1]
             self.tasks[selected_row + 1] = self.tasks[selected_row + 2]
             self.tasks[selected_row + 2] = temp
+            self.down_state = False
         else:
             self.status_show_message("error", "Already at the Bottom", 1200)
 
 
-uygulama = QApplication([])
-pencere = TODOApp()
-pencere.show()
-uygulama.exec()
+App = QApplication([])
+window = TODOApp()
+window.show()
+App.exec()

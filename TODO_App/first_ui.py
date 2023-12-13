@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class TODOAppUi(object):
+class TODOAppUi():
     def start_ui(self, FirstWindow):
         FirstWindow.resize(1050, 600)
         FirstWindow.setStyleSheet("MainWindow{\n"
@@ -20,7 +20,7 @@ class TODOAppUi(object):
         # Table Widget -------------------------------------------------------------------------------------------------
         self.tableWidget = QtWidgets.QTableWidget(self.center)
         self.tableWidget.setMinimumSize(QtCore.QSize(700, 360))
-        self.tableWidget.setMaximumSize(QtCore.QSize(16777215, 800))
+        self.tableWidget.setMaximumSize(QtCore.QSize(1280, 800))
         self.tableWidget.setStyleSheet("QTableWidget{\n"
                                        "    font: 12pt \"Mongolian Baiti\";\n"
                                        "    color: rgb(198, 205, 213);\n"
@@ -379,4 +379,3 @@ class TODOAppUi(object):
         self.statusbar.setStyleSheet("background-color: rgb(33, 38, 45);\n"
                                      "font: 12pt \"Mongolian Baiti\";")
         FirstWindow.setStatusBar(self.statusbar)
-        QtCore.QMetaObject.connectSlotsByName(FirstWindow)
