@@ -1,6 +1,6 @@
 from first_ui import TODOAppUi
 from completed_tasks_ui import CompletedTasksUi
-from PyQt5.QtWidgets import QMainWindow, QWidget, QCheckBox, QTableWidgetItem, QMessageBox, QApplication
+from PyQt5.QtWidgets import QMainWindow, QCheckBox, QTableWidgetItem, QMessageBox, QApplication
 from PyQt5.QtGui import QTextCharFormat, QColor
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
@@ -8,7 +8,130 @@ from datetime import datetime
 import json
 
 
-class TODOApp(QMainWindow, QWidget):
+class CompletedTasks(QMainWindow):
+    c_tasks = {}
+
+    def __init__(self):
+        super().__init__()
+        self.ui = CompletedTasksUi()
+        self.ui.start_ui(self)
+
+        self.c_highlight_date = QTextCharFormat()
+        self.c_highlight_date.setBackground(QColor(124, 227, 139))
+        self.c_highlight_date.setForeground(QColor(13, 17, 23))
+        self.c_normal_date = QTextCharFormat()
+        self.c_normal_date.setBackground(QColor(22, 27, 34))
+        self.c_normal_date.setForeground(QColor(198, 205, 213))
+
+        self.ui.c_deleteAllButton.clicked.connect(lambda : self.c_delete_all(1))
+        self.ui.c_deleteButton.clicked.connect(self.c_delete_row)
+        self.ui.c_saveToFileButton.clicked.connect(self.c_save_to_file)
+        self.ui.c_loadFromFileButton.clicked.connect(self.c_load_from_file)
+
+    def get_dict(self, tasks):
+        self.c_tasks = tasks
+
+    def c_is_weekday(self, control_date):
+        control_date = datetime.strptime(control_date, "%d.%m.%Y")
+        if control_date.weekday() >= 5:
+            print("a")
+            self.c_normal_date.setForeground(QColor(255, 0, 0))
+        else:
+            self.c_normal_date.setForeground(QColor(198, 205, 213))
+
+    def ready_widgets(self):
+        print(self.c_tasks)
+        for x in self.c_tasks:
+            date = QtCore.QDate.fromString(self.c_tasks[x]["date"], "dd.MM.yyyy")
+            self.ui.c_tableWidget.setRowCount(x)
+            self.ui.c_tableWidget.setStyleSheet("QTableWidget{\n"
+                                                "    font: 12pt \"Mongolian Baiti\";\n"
+                                                "    color: rgb(198, 205, 213);\n"
+                                                "    background-color: rgb(22, 27, 34);\n"
+                                                "    border-radius: 25px;\n"
+                                                "    selection-background-color: rgb(198, 205, 213);\n"
+                                                "    selection-color: rgb(22, 27, 34);\n"
+                                                "    alternate-background-color: rgb(255, 255, 255);\n"
+                                                "}\n"
+                                                "QHeaderView, QHeaderView::section {\n"
+                                                "    background-color: rgb(13, 17, 23);\n"
+                                                "    color: rgb(198, 205, 213);\n"
+                                                "}\n"
+                                                "QTableView QTableCornerButton::section{\n"
+                                                "    border: 1px solid;\n"
+                                                "    border-color: rgba(33, 38, 45, 255);\n"
+                                                "    background-color: rgba(33, 38, 45, 255);\n"
+                                                "}")
+            self.ui.c_tableWidget.setItem(x - 1, 0, QTableWidgetItem(self.c_tasks[x]["name"]))
+            self.ui.c_tableWidget.setItem(x - 1, 1, QTableWidgetItem(self.c_tasks[x]["description"]))
+            self.ui.c_tableWidget.setItem(x - 1, 2, QTableWidgetItem(self.c_tasks[x]["date"]))
+            self.ui.c_calendarWidget.setDateTextFormat(date, self.c_highlight_date)
+
+    def c_delete_all(self, select: int):
+        if select == 1:
+            answer = QMessageBox.question(self, "Are You Sure", "Do you want delete all tasks?",
+                                          QMessageBox.Yes | QMessageBox.No)
+        else:
+            answer = QMessageBox.No
+        if answer == QMessageBox.Yes:
+            for x in self.c_tasks:
+                date = self.c_tasks[x]["date"]
+                self.c_is_weekday(date)
+                date = QtCore.QDate.fromString(date, "dd.MM.yyyy")
+                self.ui.c_calendarWidget.setDateTextFormat(date, self.c_normal_date)
+            self.ui.c_tableWidget.setRowCount(0)
+            self.c_tasks = {}
+
+    def c_delete_row(self):
+        selected_row = self.ui.c_tableWidget.currentRow()
+        print(selected_row)
+        if selected_row == -1:
+            print("Seçim yapmadın :(")
+        else:
+            count = 0
+            date = self.c_tasks[selected_row + 1]["date"]
+            self.ui.c_tableWidget.removeRow(selected_row)
+            for i in range(selected_row + 1, len(self.c_tasks)):
+                self.c_tasks[i] = self.c_tasks[i + 1]
+            self.c_tasks.pop(len(self.c_tasks))
+            for x in self.c_tasks:
+                if date == self.c_tasks[x]["date"]:
+                    count += 1
+            if count == 0:
+                self.c_is_weekday(date)
+                date = QtCore.QDate.fromString(date, "dd.MM.yyyy")
+                self.ui.c_calendarWidget.setDateTextFormat(date, self.c_normal_date)
+
+    def c_save_to_file(self):
+        answer = QMessageBox.question(self, "Are You Sure",
+                                      "Existing file will be deleted. Do you want to continue?",
+                                      QMessageBox.Yes | QMessageBox.No)
+        if answer == QMessageBox.Yes:
+            folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder")
+            if folder != "":
+                json_file = json.dumps(self.c_tasks, indent=2)
+                file = open(folder + "/todoapp_completed_tasks.json", "w")
+                file.write(json_file)
+                file.close()
+
+    def c_load_from_file(self):
+        answer = QMessageBox.question(self, "Are You Sure",
+                                      "Existing tasks will be deleted. Do you want to continue?",
+                                      QMessageBox.Yes | QMessageBox.No)
+        if answer == QMessageBox.Yes:
+            json_file = QtWidgets.QFileDialog.getOpenFileName(self, "Select File", "", "JSON Files (*.json)")
+            if json_file != ("", ""):
+                file = open(json_file[0])
+                readed_dict = json.load(file)
+                self.c_delete_all(-1)
+                self.c_tasks = {}
+                for x in readed_dict:
+                    self.c_tasks[int(x)] = readed_dict[x]
+                file.close()
+                self.ready_widgets()
+
+
+class TODOApp(QMainWindow):
     tasks = {}
     completed_tasks = {}
     checkBox = []
@@ -22,8 +145,7 @@ class TODOApp(QMainWindow, QWidget):
         super().__init__()
         self.ui = TODOAppUi()
         self.ui.start_ui(self)
-        self.c_ui = CompletedTasksUi()
-        self.setWindowTitle("TODOApp")
+        self.c_ui = CompletedTasks()
 
         self.highlight_date = QTextCharFormat()
         self.highlight_date.setBackground(QColor(49, 78, 130))
@@ -45,7 +167,7 @@ class TODOApp(QMainWindow, QWidget):
             self.tasks[i] = self.tasks[i + 1]
         self.tasks.pop(len(self.tasks))
 
-    def remove_from_calender(self, date):
+    def remove_from_calender(self, date: str):
         count = 0
         for x in self.tasks:
             if date == self.tasks[x]["date"]:
@@ -54,7 +176,7 @@ class TODOApp(QMainWindow, QWidget):
             date = QtCore.QDate.fromString(date, "dd.MM.yyyy")
             self.ui.calendarWidget.setDateTextFormat(date, self.normal_date)
 
-    def status_show_message(self, style_type, message, ms):
+    def status_show_message(self, style_type: str, message: str, ms: int):
         if style_type == "error":
             self.ui.statusbar.setStyleSheet("background-color: rgb(33, 38, 45);\n"
                                             "font: 12pt \"Mongolian Baiti\";"
@@ -145,6 +267,7 @@ class TODOApp(QMainWindow, QWidget):
             self.checkBox.pop(signal_number)
             date = self.tasks[signal_number + 1]["date"]
             self.completed_tasks[self.completed_task_number] = self.tasks[signal_number + 1]
+            self.completed_tasks[self.completed_task_number]["date"] = datetime.now().strftime("%d.%m.%Y")
             self.completed_task_number += 1
             self.remove_from_dict(signal_number + 1)
             self.remove_from_calender(date)
@@ -164,7 +287,6 @@ class TODOApp(QMainWindow, QWidget):
                 self.row = 1
                 self.tasks = {}
                 self.checkBox = []
-                self.status_show_message("success", "Successfully Deleted", 1000)
             elif select == 1:
                 answer = QMessageBox.question(self, "Are You Sure", "Do you want delete all tasks?",
                                               QMessageBox.Yes | QMessageBox.No)
@@ -188,12 +310,19 @@ class TODOApp(QMainWindow, QWidget):
             date = self.tasks[selected_row + 1]["date"]
             self.ui.tableWidget.removeRow(selected_row)
             self.row -= 1
+            self.checkBox.pop(selected_row)
+            for o in self.checkBox:
+                number = int(o.objectName())
+                if selected_row < number:
+                    o.setObjectName(str(number - 1))
             self.remove_from_dict(selected_row + 1)
             self.remove_from_calender(date)
             self.status_show_message("success", "Successfully Removed", 1000)
 
     def show_completed_tasks(self):
-        QMessageBox.information(self, "Show Completed Tasks", "Under Maintenance")
+        self.c_ui.get_dict(self.completed_tasks)
+        self.c_ui.ready_widgets()
+        self.c_ui.show()
 
     def save_to_file(self):
         answer = QMessageBox.question(self, "Are You Sure",

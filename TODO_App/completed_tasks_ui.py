@@ -2,18 +2,16 @@ from PyQt5 import QtCore, QtWidgets
 
 
 class CompletedTasksUi():
-    def start_ui(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1050, 610)
-        MainWindow.setStyleSheet("MainWindow{\n"
-                                 "    background-color: rgb(33, 38, 45);\n"
-                                 "}")
-        self.c_centralwidget = QtWidgets.QWidget(MainWindow)
-        self.c_centralwidget.setStyleSheet("background-color: rgb(33, 38, 45);\n"
-                                           "")
-        self.c_centralwidget.setObjectName("centralwidget")
+    def start_ui(self, CompletedWindow):
+        CompletedWindow.resize(1050, 610)
+        CompletedWindow.setStyleSheet("MainWindow{\n"
+                                      "    background-color: rgb(33, 38, 45);\n"
+                                      "}")
+        self.c_centralwidget = QtWidgets.QWidget(CompletedWindow)
+        self.c_centralwidget.setStyleSheet("background-color: rgb(33, 38, 45);\n")
         self.c_gridLayout = QtWidgets.QGridLayout(self.c_centralwidget)
-        self.c_gridLayout.setObjectName("gridLayout_2")
+        CompletedWindow.setWindowTitle("Completed Tasks")
+
         # Table Widget -------------------------------------------------------------------------------------------------
         self.c_tableWidget = QtWidgets.QTableWidget(self.c_centralwidget)
         self.c_tableWidget.setMaximumSize(QtCore.QSize(1280, 720))
@@ -34,20 +32,18 @@ class CompletedTasksUi():
                                          "    border-color: rgba(33, 38, 45, 255);\n"
                                          "    background-color: rgba(33, 38, 45, 255);\n"
                                          "}")
-        self.c_tableWidget.setColumnCount(4)
+        self.c_tableWidget.setColumnCount(3)
         self.c_tableWidget.setRowCount(0)
-        self.c_tableWidget.setColumnWidth(0, 5)
-        self.c_tableWidget.setColumnWidth(1, 150)
-        self.c_tableWidget.setColumnWidth(2, 350)
-        self.c_tableWidget.setColumnWidth(3, 110)
-        self.c_tableWidget.setHorizontalHeaderLabels(["", "Name", "Description", "Date"])
+        self.c_tableWidget.setColumnWidth(0, 150)
+        self.c_tableWidget.setColumnWidth(1, 430)
+        self.c_tableWidget.setColumnWidth(2, 130)
+        self.c_tableWidget.setHorizontalHeaderLabels(["Name", "Description", "Date"])
         self.c_gridLayout.addWidget(self.c_tableWidget, 0, 0, 1, 1)
 
         # Calender Widget ----------------------------------------------------------------------------------------------
         self.calenderLayout = QtWidgets.QVBoxLayout()
         self.calenderLayout.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.calenderLayout.setContentsMargins(-1, -1, -1, 90)
-        self.calenderLayout.setObjectName("calenderLayout")
         self.c_calendarWidget = QtWidgets.QCalendarWidget(self.c_centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -207,4 +203,4 @@ class CompletedTasksUi():
         self.c_emptyLabel_5.setText("")
         self.c_verticalLayout.addWidget(self.c_emptyLabel_5)
         self.c_gridLayout.addLayout(self.c_verticalLayout, 1, 0, 1, 2)
-        MainWindow.setCentralWidget(self.c_centralwidget)
+        CompletedWindow.setCentralWidget(self.c_centralwidget)

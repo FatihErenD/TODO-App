@@ -16,6 +16,7 @@ class TODOAppUi():
         self.gridLayout.setHorizontalSpacing(15)
         self.gridLayout.setVerticalSpacing(10)
         self.gridLayout_2 = QtWidgets.QGridLayout(self.center)
+        FirstWindow.setWindowTitle("TODOApp")
 
         # Table Widget -------------------------------------------------------------------------------------------------
         self.tableWidget = QtWidgets.QTableWidget(self.center)
