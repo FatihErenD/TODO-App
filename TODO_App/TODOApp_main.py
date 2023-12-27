@@ -1,5 +1,4 @@
-from first_ui import TODOAppUi
-from completed_tasks_ui import CompletedTasksUi
+from Uis import TODOAppUi, CompletedTasksUi
 from PyQt5.QtWidgets import QMainWindow, QCheckBox, QTableWidgetItem, QMessageBox, QApplication
 from PyQt5.QtGui import QTextCharFormat, QColor
 from PyQt5 import QtWidgets, QtCore
@@ -28,10 +27,12 @@ class CompletedTasks(QMainWindow):
         self.ui.c_saveToFileButton.clicked.connect(self.c_save_to_file)
         self.ui.c_loadFromFileButton.clicked.connect(self.c_load_from_file)
 
-    def get_dict(self, tasks):
+    def get_dict(self, tasks: dict):
+        """Tamamlanmış görevleri sözlüğe atma"""
         self.c_tasks = tasks
 
-    def c_is_weekday(self, control_date):
+    def c_is_weekday(self, control_date: str):
+        """Günün hafta sonu olup olmadığını kontrol etme ve takvim rengini ona göre ayarlama"""
         control_date = datetime.strptime(control_date, "%d.%m.%Y")
         if control_date.weekday() >= 5:
             print("a")
@@ -40,39 +41,24 @@ class CompletedTasks(QMainWindow):
             self.c_normal_date.setForeground(QColor(198, 205, 213))
 
     def ready_widgets(self):
+        """Sayfa ilk açıldığında sayfanın yüklenmesi"""
         print(self.c_tasks)
         for x in self.c_tasks:
             date = QtCore.QDate.fromString(self.c_tasks[x]["date"], "dd.MM.yyyy")
             self.ui.c_tableWidget.setRowCount(x)
-            self.ui.c_tableWidget.setStyleSheet("QTableWidget{\n"
-                                                "    font: 12pt \"Mongolian Baiti\";\n"
-                                                "    color: rgb(198, 205, 213);\n"
-                                                "    background-color: rgb(22, 27, 34);\n"
-                                                "    border-radius: 25px;\n"
-                                                "    selection-background-color: rgb(198, 205, 213);\n"
-                                                "    selection-color: rgb(22, 27, 34);\n"
-                                                "    alternate-background-color: rgb(255, 255, 255);\n"
-                                                "}\n"
-                                                "QHeaderView, QHeaderView::section {\n"
-                                                "    background-color: rgb(13, 17, 23);\n"
-                                                "    color: rgb(198, 205, 213);\n"
-                                                "}\n"
-                                                "QTableView QTableCornerButton::section{\n"
-                                                "    border: 1px solid;\n"
-                                                "    border-color: rgba(33, 38, 45, 255);\n"
-                                                "    background-color: rgba(33, 38, 45, 255);\n"
-                                                "}")
+            self.ui.c_tableWidget.setStyleSheet(self.ui.c_tableWidgetStyle)
             self.ui.c_tableWidget.setItem(x - 1, 0, QTableWidgetItem(self.c_tasks[x]["name"]))
             self.ui.c_tableWidget.setItem(x - 1, 1, QTableWidgetItem(self.c_tasks[x]["description"]))
             self.ui.c_tableWidget.setItem(x - 1, 2, QTableWidgetItem(self.c_tasks[x]["date"]))
             self.ui.c_calendarWidget.setDateTextFormat(date, self.c_highlight_date)
 
     def c_delete_all(self, select: int):
+        """Tüm tamamlanmış görevleri silme"""
         if select == 1:
             answer = QMessageBox.question(self, "Are You Sure", "Do you want delete all tasks?",
                                           QMessageBox.Yes | QMessageBox.No)
         else:
-            answer = QMessageBox.No
+            answer = QMessageBox.Yes
         if answer == QMessageBox.Yes:
             for x in self.c_tasks:
                 date = self.c_tasks[x]["date"]
@@ -83,6 +69,7 @@ class CompletedTasks(QMainWindow):
             self.c_tasks = {}
 
     def c_delete_row(self):
+        """Seçili tamamlanmış görevi silme"""
         selected_row = self.ui.c_tableWidget.currentRow()
         print(selected_row)
         if selected_row == -1:
@@ -103,6 +90,7 @@ class CompletedTasks(QMainWindow):
                 self.ui.c_calendarWidget.setDateTextFormat(date, self.c_normal_date)
 
     def c_save_to_file(self):
+        """Tamamlanmış görevleri dosyaya kaydetme"""
         answer = QMessageBox.question(self, "Are You Sure",
                                       "Existing file will be deleted. Do you want to continue?",
                                       QMessageBox.Yes | QMessageBox.No)
@@ -115,6 +103,7 @@ class CompletedTasks(QMainWindow):
                 file.close()
 
     def c_load_from_file(self):
+        """Tamamlanmış görevleri daha önceden kaydedilmiş dosyadan yükleme"""
         answer = QMessageBox.question(self, "Are You Sure",
                                       "Existing tasks will be deleted. Do you want to continue?",
                                       QMessageBox.Yes | QMessageBox.No)
@@ -163,11 +152,13 @@ class TODOApp(QMainWindow):
         self.ui.tableWidget.itemChanged.connect(self.edit_task)
 
     def remove_from_dict(self, remove_index: int):
+        """Görevleri sözlükten silme"""
         for i in range(remove_index, len(self.tasks)):
             self.tasks[i] = self.tasks[i + 1]
         self.tasks.pop(len(self.tasks))
 
     def remove_from_calender(self, date: str):
+        """Görevleri takvimden silme"""
         count = 0
         for x in self.tasks:
             if date == self.tasks[x]["date"]:
@@ -177,6 +168,7 @@ class TODOApp(QMainWindow):
             self.ui.calendarWidget.setDateTextFormat(date, self.normal_date)
 
     def status_show_message(self, style_type: str, message: str, ms: int):
+        """Kullanıcıyı bilgilendirme"""
         if style_type == "error":
             self.ui.statusbar.setStyleSheet("background-color: rgb(33, 38, 45);\n"
                                             "font: 12pt \"Mongolian Baiti\";"
@@ -188,6 +180,7 @@ class TODOApp(QMainWindow):
         self.ui.statusbar.showMessage(message, ms)
 
     def add_to_list(self):
+        """Görev ekleme"""
         scan_name = self.ui.nameLineEdit.text()
         scan_description = self.ui.descriptionLineEdit.text()
         selected_date = self.ui.calendarWidget.selectedDate().toPyDate().strftime("%d.%m.%Y")
@@ -206,24 +199,7 @@ class TODOApp(QMainWindow):
             self.ui.tableWidget.setItem(self.row - 1, 2, QtWidgets.QTableWidgetItem(scan_description))
             self.ui.tableWidget.setItem(self.row - 1, 3, QtWidgets.QTableWidgetItem(str(selected_date)))
             self.checkBox[self.row - 1].clicked.connect(self.checked_task)
-            self.ui.tableWidget.setStyleSheet("QTableWidget{\n"
-                                              "    font: 12pt \"Mongolian Baiti\";\n"
-                                              "    color: rgb(198, 205, 213);\n"
-                                              "    background-color: rgb(22, 27, 34);\n"
-                                              "    border-radius: 25px;\n"
-                                              "    selection-background-color: rgb(198, 205, 213);\n"
-                                              "    selection-color: rgb(22, 27, 34);\n"
-                                              "    alternate-background-color: rgb(255, 255, 255);\n"
-                                              "}\n"
-                                              "QHeaderView, QHeaderView::section {\n"
-                                              "    background-color: rgb(13, 17, 23);\n"
-                                              "    color: rgb(198, 205, 213);\n"
-                                              "}\n"
-                                              "QTableView QTableCornerButton::section{\n"
-                                              "    border: 1px solid;\n"
-                                              "    border-color: rgba(33, 38, 45, 255);\n"
-                                              "    background-color: rgba(33, 38, 45, 255);\n"
-                                              "}")
+            self.ui.tableWidget.setStyleSheet(self.ui.tableWidgetStyle)
             self.ui.calendarWidget.setDateTextFormat(self.ui.calendarWidget.selectedDate(), self.highlight_date)
             self.status_show_message("success", "Successfully Added", 1000)
             self.row += 1
@@ -234,6 +210,7 @@ class TODOApp(QMainWindow):
         self.ui.descriptionLineEdit.clear()
 
     def edit_task(self):
+        """Görevi düzenleme"""
         selected_row = self.ui.tableWidget.currentRow()
         if selected_row != -1 and not self.add_state and not self.up_state and not self.down_state:
             if self.tasks[selected_row + 1]["name"] != self.ui.tableWidget.item(selected_row, 1).text() \
@@ -257,9 +234,8 @@ class TODOApp(QMainWindow):
                     self.status_show_message("error",
                                              "Incorrect Date Format. Format Should be dd.mm.yyyy", 2000)
 
-            print(self.tasks)
-
     def checked_task(self):
+        """Tamamlanan görevleri, tamamlanan görevler ekranına yollama"""
         signal = self.sender()
         signal_number = int(signal.objectName())
         if signal.checkState() == Qt.Checked:
@@ -278,6 +254,7 @@ class TODOApp(QMainWindow):
             self.row -= 1
 
     def delete_all(self, select: int):
+        """Tüm görevleri silme"""
         if len(self.tasks) > 0:
             if select == -1:
                 for x in self.tasks:
@@ -303,6 +280,7 @@ class TODOApp(QMainWindow):
             QMessageBox.warning(self, "Warning", "There is nothing to delete.")
 
     def delete_row(self):
+        """Seçili görevi silme"""
         selected_row = self.ui.tableWidget.currentRow()
         if selected_row == -1:
             self.status_show_message("error", "Please Select a Task to Remove", 1200)
@@ -320,11 +298,13 @@ class TODOApp(QMainWindow):
             self.status_show_message("success", "Successfully Removed", 1000)
 
     def show_completed_tasks(self):
+        """Tamamlanmış görevlerin bulunduğu ekranı gösterme"""
         self.c_ui.get_dict(self.completed_tasks)
         self.c_ui.ready_widgets()
         self.c_ui.show()
 
     def save_to_file(self):
+        """Görevleri dosyaya kaydetme"""
         answer = QMessageBox.question(self, "Are You Sure",
                                       "Existing file will be deleted. Do you want to continue?",
                                       QMessageBox.Yes | QMessageBox.No)
@@ -342,6 +322,7 @@ class TODOApp(QMainWindow):
             self.status_show_message("error", "Cant Save", 1000)
 
     def load_from_file(self):
+        """Görevleri daha önceden kaydedilmiş dosyadan yükleme"""
         answer = QMessageBox.question(self, "Are You Sure",
                                       "Existing tasks will be deleted. Do you want to continue?",
                                       QMessageBox.Yes | QMessageBox.No)
@@ -370,30 +351,14 @@ class TODOApp(QMainWindow):
                     self.checkBox[self.row - 1].setObjectName(str(self.row - 1))
                     self.ui.tableWidget.setCellWidget(self.row - 1, 0, self.checkBox[self.row - 1])
                     self.checkBox[self.row - 1].clicked.connect(self.checked_task)
-                    self.ui.tableWidget.setStyleSheet("QTableWidget{\n"
-                                                      "    font: 12pt \"Mongolian Baiti\";\n"
-                                                      "    color: rgb(198, 205, 213);\n"
-                                                      "    background-color: rgb(22, 27, 34);\n"
-                                                      "    border-radius: 25px;\n"
-                                                      "    selection-background-color: rgb(198, 205, 213);\n"
-                                                      "    selection-color: rgb(22, 27, 34);\n"
-                                                      "    alternate-background-color: rgb(255, 255, 255);\n"
-                                                      "}\n"
-                                                      "QHeaderView, QHeaderView::section {\n"
-                                                      "    background-color: rgb(13, 17, 23);\n"
-                                                      "    color: rgb(198, 205, 213);\n"
-                                                      "}\n"
-                                                      "QTableView QTableCornerButton::section{\n"
-                                                      "    border: 1px solid;\n"
-                                                      "    border-color: rgba(33, 38, 45, 255);\n"
-                                                      "    background-color: rgba(33, 38, 45, 255);\n"
-                                                      "}")
+                    self.ui.tableWidget.setStyleSheet(self.ui.tableWidgetStyle)
                     date = QtCore.QDate.fromString(date, "dd.MM.yyyy")
                     self.ui.calendarWidget.setDateTextFormat(date, self.highlight_date)
                     self.row += 1
                 self.status_show_message("success", "Successfully Loaded", 1000)
 
     def up_row(self):
+        """Seçili satırı bir satır yukarı çıkarma"""
         selected_row = self.ui.tableWidget.currentRow()
         if selected_row != 0:
             self.up_state = True
@@ -422,6 +387,7 @@ class TODOApp(QMainWindow):
             self.status_show_message("error", "Already at the Top", 1200)
 
     def down_row(self):
+        """Seçili satırı bir satır aşağı indirme"""
         selected_row = self.ui.tableWidget.currentRow()
         if selected_row < len(self.tasks) - 1:
             self.down_state = True
